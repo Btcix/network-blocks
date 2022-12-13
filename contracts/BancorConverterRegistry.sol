@@ -1,28 +1,23 @@
-// File: contracts/utility/interfaces/IOwned.sol
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
-pragma solidity ^0.4.24;
+pragma solidity ^0.8.0;
 
 /*
     Owned contract interface
 */
-contract IOwned {
+interface IOwned {
     // this function isn't abstract since the compiler emits automatically generated getter functions as external
-    function owner() public view returns (address) {}
+    function owner() external view returns (address);
 
-    function transferOwnership(address _newOwner) public;
-    function acceptOwnership() public;
+    function transferOwnership(address _newOwner) external;
+    function acceptOwnership() external;
 }
-
-// File: contracts/utility/Owned.sol
-
-pragma solidity ^0.4.24;
-
 
 /*
     Provides support and utilities for contract ownership
 */
 contract Owned is IOwned {
-    address public owner;
+    address public override owner;
     address public newOwner;
 
     event OwnerUpdate(address indexed _prevOwner, address indexed _newOwner);
@@ -30,7 +25,7 @@ contract Owned is IOwned {
     /**
         @dev constructor
     */
-    constructor() public {
+    constructor() {
         owner = msg.sender;
     }
 
@@ -47,7 +42,7 @@ contract Owned is IOwned {
 
         @param _newOwner    new contract owner
     */
-    function transferOwnership(address _newOwner) public ownerOnly {
+    function transferOwnership(address _newOwner) public ownerOnly override {
         require(_newOwner != owner);
         newOwner = _newOwner;
     }
@@ -55,17 +50,13 @@ contract Owned is IOwned {
     /**
         @dev used by a new owner to accept an ownership transfer
     */
-    function acceptOwnership() public {
+    function acceptOwnership() public override {
         require(msg.sender == newOwner);
         emit OwnerUpdate(owner, newOwner);
         owner = newOwner;
         newOwner = address(0);
     }
 }
-
-// File: contracts/utility/Utils.sol
-
-pragma solidity ^0.4.24;
 
 /*
     Utilities & Common Modifiers
@@ -74,7 +65,7 @@ contract Utils {
     /**
         constructor
     */
-    constructor() public {
+    constructor() {
     }
 
     // verifies that an amount is greater than zero
@@ -96,12 +87,6 @@ contract Utils {
     }
 
 }
-
-// File: contracts/BancorConverterRegistry.sol
-
-pragma solidity ^0.4.24;
-
-
 
 /**
     Bancor Converter Registry
@@ -130,7 +115,7 @@ contract BancorConverterRegistry is Owned, Utils {
     /**
         @dev constructor
     */
-    constructor() public {
+    constructor() {
     }
 
     /**
@@ -223,17 +208,19 @@ contract BancorConverterRegistry is Owned, Utils {
         ownerOnly
         validAddress(_token)
     {
-        require(_index < tokensToConverters[_token].length);
+        uint256 _tokensToConvertersTokensLength = tokensToConverters[_token].length;
+        require(_index < _tokensToConvertersTokensLength);
 
         address converter = tokensToConverters[_token][_index];
 
         // move all newer converters 1 position lower
-        for (uint32 i = _index + 1; i < tokensToConverters[_token].length; i++) {
+        for (uint32 i = _index + 1; i < _tokensToConvertersTokensLength; ) {
             tokensToConverters[_token][i - 1] = tokensToConverters[_token][i];
+            unchecked { ++i; }
         }
 
         // decrease the number of converters defined for the token by 1
-        tokensToConverters[_token].length--;
+        tokensToConverters[_token].pop();
 
         // removes the converter from the converters -> tokens list
         delete convertersToTokens[converter];
