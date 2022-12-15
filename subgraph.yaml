@@ -6,10 +6,11 @@ schema:
 dataSources:
   - kind: ethereum/contract
     name: ConverterRegistryContract
-    network: rinkeby
+    network: btcix
     source:
-      address: "0x0ddff327ddf7fe838e3e63d02001ef23ad1ede8e"
+      address: "0x96822ccc2aac66a73efeda4fafe1c87525b64187"
       abi: ConverterRegistryContract
+      startBlock: 5330400
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.3
